@@ -1,0 +1,29 @@
+version: '3.2'
+
+services:
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+    volumes:
+      - ../initdb.d/:/docker-entrypoint-initdb.d/
+    restart: always
+    healthcheck:
+     test: ["CMD", "mysqladmin" ,"ping", "-hlocalhost", "-uroot" , "-ppassword"]
+     timeout: 20s
+     retries: 10
+
+  app:
+    build:
+      context: ../
+      dockerfile: php8.0-mysql8.0/Dockerfile
+    environment:
+      COMPOSER_ALLOW_SUPERUSER: 1
+      COMPOSER_NO_INTERACTION: 1
+      DB_HOST: db
+      DB_NAME: pdotest
+      DB_USER: root
+      DB_PASS: password
+    depends_on:
+      db:
+        condition: service_healthy
